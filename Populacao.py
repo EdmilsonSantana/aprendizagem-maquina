@@ -4,6 +4,7 @@ from util import aleatorioMinMax, aleatorio
 class Populacao(object):
   
   probabilidade_mutacao = 0.2
+  log = "Geracao %d: \n%s"
   #probabilidade_selecao = 0.9
   
   def __init__(self):
@@ -14,13 +15,13 @@ class Populacao(object):
     
   def evoluir(self,iteracoes):
     geracao = 1
-    print("Geracao %d: %s" % (geracao, self.cromossomos))
-    if(self.cromossomos >= 2):
-      while(geracao <= iteracoes):
+    print(Populacao.log % (geracao, self.__str__()))
+    if(len(self.cromossomos) % 2 == 0):
+      while(geracao <= iteracoes and not self.achouObjetivo()):
         vencedores = self.torneio()
         self.cromossomos = self.selecao(vencedores)
         geracao += 1
-        print("Geracao %d: %s" % (geracao, self.cromossomos))
+        print(Populacao.log % (geracao, self.__str__()))
         
     return self.cromossomos
      
@@ -35,9 +36,7 @@ class Populacao(object):
     
   def mutacao(self, cromossomo):
     if(aleatorio() < Populacao.probabilidade_mutacao):
-     # antes = cromossomo.__str__()
       cromossomo.mutacao()
-     # print("Mutacao - Antes: %s | Depois %s" % (antes, cromossomo))
     return cromossomo
     
   def torneio(self):
@@ -59,7 +58,18 @@ class Populacao(object):
     min = 0
     return (self.cromossomos[aleatorioMinMax(min, max)], 
             self.cromossomos[aleatorioMinMax(min, max)])
+  
+  def achouObjetivo(self):
+    achou = False 
+    for cromossomo in self.cromossomos:
+      achou = cromossomo.objetivo()
+      if(achou):
+        break
+    return achou
     
+  def __str__(self):
+    return '\n'.join([cromossomo.__str__() for cromossomo in self.cromossomos])
+  
   def __repr__(self):
     return self.cromossomos
   

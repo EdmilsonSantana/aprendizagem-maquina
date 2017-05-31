@@ -1,13 +1,13 @@
 from Populacao import Populacao
-from Regioes import Regioes
+from Rainhas import Rainhas
 
 if __name__ == "__main__":
   populacao = Populacao()
 
-  populacao.adicionar(Regioes())
-  populacao.adicionar(Regioes())
-  populacao.adicionar(Regioes())
-  populacao.adicionar(Regioes())
+  populacao.adicionar(Rainhas())
+  populacao.adicionar(Rainhas())
+  populacao.adicionar(Rainhas())
+  populacao.adicionar(Rainhas())
 
-  populacao.evoluir(50)
+  populacao.evoluir(1000)
   
