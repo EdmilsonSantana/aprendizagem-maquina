@@ -1,13 +1,15 @@
-from util import binario, aleatorioMinMax
+from util import binario, aleatorioMinMax, aleatorio
 
 class Cromossomo(object):
+  
+  probabilidade_mutacao = 0.01
   
   def __init__(self, quantidade, bits):
     self.criarGenes(quantidade, bits)
     
   def criarGenes(self, quantidade, bits):
     tamanho = quantidade*bits
-    self.genes = "".join([binario() for i in range(0, tamanho)])
+    self.genes = "".join([binario() for _ in range(0, tamanho)])
     self.posicoes = range(0, tamanho, bits)
     self.bits = bits
     self.quantidade = quantidade
@@ -18,14 +20,13 @@ class Cromossomo(object):
   
   @staticmethod
   def reproduzir(x, y):
-    posicao = aleatorioMinMax(1, len(x.genes) - 1)
+    posicao = x.posicoes[aleatorioMinMax(1, x.quantidade - 1)]
     genesA, genesB = Cromossomo.corte(x, y, posicao)
     cromossomo = x.__class__
     filhoA = cromossomo()
     filhoB = cromossomo()
     filhoA.genes = genesA
     filhoB.genes = genesB
-    
     return filhoA, filhoB
   
   @staticmethod
@@ -35,12 +36,14 @@ class Cromossomo(object):
     return genesA, genesB
 
   def mutacao(self):
-    index = aleatorioMinMax(0, len(self.genes) - 1)
-    mutados = list(self.genes)
-    gene = mutados[index]
-    mutados[index] = "0" if gene == "1" else "1"
-    self.genes = "".join(mutados)
-   
+    genes = list(self.genes)
+    index = 0
+    for gene in genes:
+      if(aleatorio() <= Cromossomo.probabilidade_mutacao):
+        gene = genes[index]
+        genes[index] = "0" if gene == "1" else "1"
+    self.genes = "".join(genes)
+  
   def fitness(self):
     raise NotImplementedError("Metodo nao implementado.")
     

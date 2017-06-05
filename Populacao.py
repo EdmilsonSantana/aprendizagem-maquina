@@ -2,42 +2,59 @@ from Cromossomo import Cromossomo
 from util import aleatorioMinMax, aleatorio
 
 class Populacao(object):
-  
-  probabilidade_mutacao = 0.2
+  probabilidade_crossover = 0.9
   log = "Geracao %d: \n%s"
-  #probabilidade_selecao = 0.9
   
-  def __init__(self):
-    self.cromossomos = []
+  def __init__(self, tipo, tamanho=0):
+    self.cromossomos = [tipo() for _ in range(tamanho)]
+    self.geracao = 1
     
   def adicionar(self, cromossomo):
     self.cromossomos.append(cromossomo)
     
   def evoluir(self,iteracoes):
-    geracao = 1
-    print(Populacao.log % (geracao, self.__str__()))
+    self.mensagem()
     if(len(self.cromossomos) % 2 == 0):
-      while(geracao <= iteracoes and not self.achouObjetivo()):
-        vencedores = self.torneio()
-        self.cromossomos = self.selecao(vencedores)
-        geracao += 1
-        print(Populacao.log % (geracao, self.__str__()))
+      while(self.geracao <= iteracoes and not self.achouObjetivo()):
+        self.selecao()
+        self.geracao += 1
+        self.mensagem()
         
     return self.cromossomos
      
-  def selecao(self, vencedores):
-    selecao = []
-    for i in range(0, len(vencedores), 2):
-      filhoA, filhoB = Cromossomo.reproduzir(vencedores[i], vencedores[i+1])
-      selecao.append(self.mutacao(filhoA))
-      selecao.append(self.mutacao(filhoB))
-      
-    return selecao
+  def mensagem(self):
+    print(Populacao.log % (self.geracao, self.__str__()))
     
-  def mutacao(self, cromossomo):
-    if(aleatorio() < Populacao.probabilidade_mutacao):
-      cromossomo.mutacao()
-    return cromossomo
+  def selecao(self):
+    vencedores = self.torneio()
+    selecionados = []
+    for i in range(0, len(vencedores), 2):
+      filhoA, filhoB = self.crossover(vencedores[i], vencedores[i+1])
+      filhoA, filhoB = self.mutacao(filhoA, filhoB)
+      selecionados.append(filhoA)
+      selecionados.append(filhoB)
+    self.cromossomos = self.elitismo(self.cromossomos, selecionados)
+      
+  def crossover(self, paiA, paiB):
+    filhoA = paiA
+    filhoB = paiB
+    if(aleatorio() <= Populacao.probabilidade_crossover):
+      filhoA, filhoB = Cromossomo.reproduzir(paiA, paiB)
+    return filhoA, filhoB
+  
+  def elitismo(self, pais, selecionados):
+    pais = self.ordenarPorAptidao(pais)
+    selecionados = self.ordenarPorAptidao(selecionados)
+    selecionados[-1] = pais[0]
+    return selecionados
+   
+  def ordenarPorAptidao(self, cromossomos):
+    return sorted(cromossomos, key=lambda cromossomo: cromossomo.fitness())
+    
+  def mutacao(self, cromossomoA, cromossomoB):
+    cromossomoA.mutacao()
+    cromossomoB.mutacao()
+    return cromossomoA, cromossomoB
     
   def torneio(self):
     pares = self.getParesTorneio()
@@ -64,6 +81,7 @@ class Populacao(object):
     for cromossomo in self.cromossomos:
       achou = cromossomo.objetivo()
       if(achou):
+        print("Em geracao %d: %s" % (self.geracao, cromossomo))
         break
     return achou
     

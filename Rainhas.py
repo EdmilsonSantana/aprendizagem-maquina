@@ -6,8 +6,8 @@ class Rainhas(Cromossomo):
   bits = 3
   
   def __init__(self):
-    super(Rainhas, self).__init__(Rainhas.quantidade, Rainhas.bits)
-    
+    super(Rainhas, self).__init__(Rainhas.quantidade, Rainhas.bits) 
+  
   def fitness(self):
     return self.rainhasEmAtaque()
   

@@ -2,12 +2,7 @@ from Populacao import Populacao
 from Rainhas import Rainhas
 
 if __name__ == "__main__":
-  populacao = Populacao()
-
-  populacao.adicionar(Rainhas())
-  populacao.adicionar(Rainhas())
-  populacao.adicionar(Rainhas())
-  populacao.adicionar(Rainhas())
-
-  populacao.evoluir(1000)
+  populacao = Populacao(Rainhas, 500)
+  
+  populacao.evoluir(20)
   
