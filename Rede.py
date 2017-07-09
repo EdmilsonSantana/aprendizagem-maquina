@@ -2,23 +2,31 @@
 
 from Neuronio import Neuronio
 from algebra_linear import multiplicacao_vetores
+#from otimizacao.Cromossomo import Cromossomo
 
 class Rede(object):
   TAMANHO_MINIMO_CAMADAS = 2
   INDEX_CAMADA_ENTRADA = 0
   BIAS = [1]
   
-  def __init__(self, tamanho_saida, tamanho_entrada):
+  def __init__(self, entradas_treino, saidas_treino, neuronios_por_camada=[]):
     self.camadas = []
-    self.tamanho_entrada = tamanho_entrada
-    self.tamanho_saida = tamanho_saida
-    self.adicionar_camada(tamanho_saida)
+    self.entradas_treino = entradas_treino
+    self.saidas_treino = saidas_treino
+    self.inicializar_neuronios(neuronios_por_camada)
     
-  def criar_camada(self, tamanho):
-    return [Neuronio() for _ in range(tamanho)]
+  def inicializar_neuronios(self,neuronios_por_camada):
+    for quantidade_neuronios in neuronios_por_camada:
+      camada = self.criar_camada(quantidade_neuronios)
+      self.camadas.append(camada)
 
-  def adicionar_camada(self, tamanho):
-    camada = self.criar_camada(tamanho)
+    self.ligar_camadas()
+
+  def criar_camada(self, quantidade_neuronios):
+    return [Neuronio() for _ in range(quantidade_neuronios)]
+
+  def adicionar_camada(self, quantidade_neuronios):
+    camada = self.criar_camada(quantidade_neuronios)
     self.camadas.insert(0, camada)
    
   def ligar_camadas(self):
@@ -39,7 +47,7 @@ class Rede(object):
     return len(self.camadas)   
   
   def get_tamanho_entrada(self):
-    return self.tamanho_entrada
+    return len(self.entradas_treino[0])
   
   def forward(self, entrada):
     saidas = []
@@ -49,20 +57,17 @@ class Rede(object):
       entrada = saida
     return saidas
   
-  def treinar(self,entradas, saidas, iteracoes):
+  def treinar(self, iteracoes):
     
     if self.get_quantidade_camadas() >= Rede.TAMANHO_MINIMO_CAMADAS:
       
-      self.ligar_camadas()
       c = 0
       while c < iteracoes:
-        print("Iteração %d\n" % (c + 1))
-        for i, entrada in enumerate(entradas):
-          print("Entrada: %s\n" % (entrada))
+        
+        for i, entrada in enumerate(self.entradas_treino):
           saidas_camadas = self.forward(entrada)
-          print("Saída: %s\n" % (saidas_camadas[-1]))
-          self.backpropagate(entrada, saidas_camadas, saidas[i])
-          
+          self.backpropagate(entrada, saidas_camadas, self.saidas_treino[i])
+   
         c += 1
     return self.camadas
 
@@ -77,7 +82,7 @@ class Rede(object):
                                                              saida_esperada, 
                                                              gradiente_descendente)
       
-      print("Gradiente %s da Camada %d.\n" % (gradiente_descendente, posicao_camada + 1))
+     # print("Gradiente %s da Camada %d.\n" % (gradiente_descendente, posicao_camada + 1))
       
       entrada_da_camada = None
       if posicao_camada == Rede.INDEX_CAMADA_ENTRADA:
@@ -114,88 +119,24 @@ class Rede(object):
   def derivada_sigmoid(self, x):
     return x * (1.0 - x) 
     
+  def __repr__(self):
+    return "%s\n" % ", ".join([neuronio for neuronio in camada
+                              for camada in self.camadas])
     
-rede = Rede(10, 25)
-rede.adicionar_camada(5)
+if __name__ == "__main__":
 
-entradas = [[1,0], [1,1], [0,1], [0,0]]
-saidas_esperadas = [[1], [0], [1], [0]]
+  #entradas = [[1,0], [1,1], [0,1], [0,0]]
+  #saidas = [[1], [0], [1], [0]]
 
-raw_digits = [
-          """11111
-             1...1
-             1...1
-             1...1
-             11111""",
-             
-          """..1..
-             ..1..
-             ..1..
-             ..1..
-             ..1..""",
-             
-          """11111
-             ....1
-             11111
-             1....
-             11111""",
-             
-          """11111
-             ....1
-             11111
-             ....1
-             11111""",     
-             
-          """1...1
-             1...1
-             11111
-             ....1
-             ....1""",             
-             
-          """11111
-             1....
-             11111
-             ....1
-             11111""",   
-             
-          """11111
-             1....
-             11111
-             1...1
-             11111""",             
+  entradas = pd.read_csv('./datasets/ocupacao-treino.csv')
+  print(entradas)
+  #rede = Rede(entradas, saidas, [2, 2, 1])
 
-          """11111
-             ....1
-             ....1
-             ....1
-             ....1""",
-             
-          """11111
-             1...1
-             11111
-             1...1
-             11111""",    
-             
-          """11111
-             1...1
-             11111
-             ....1
-             11111"""]     
+  #print("Pesos %s" % (rede.treinar(10000)) )
 
-def make_digit(raw_digit):
-  return [1 if c == '1' else 0
-          for row in raw_digit.split("\n")
-          for c in row.strip()]
-                
-inputs = map(make_digit, raw_digits)
-
-targets = [[1 if i == j else 0 for i in range(10)]
-            for j in range(10)]
-
-rede.treinar(inputs, targets, 10000)
-
-for i, input in enumerate(inputs):
-  outputs = rede.forward(input)[-1]
-  print i, [round(p,2) for p in outputs]
+  #for i, input in enumerate(entradas):
+  #  outputs = rede.forward(input)[-1]
+  #  print(i, [round(p,2) for p in outputs])
   
+
 
