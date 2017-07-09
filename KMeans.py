@@ -1,5 +1,7 @@
 from algebra_linear import distancia_quadratica, media_dos_vetores
 import random
+from util import gerar_grafico, ler_csv, mostrar_grafico
+from collections import Counter, defaultdict
 
 class KMeans(object):
   def __init__(self, k):
@@ -14,8 +16,8 @@ class KMeans(object):
     self.agrupamentos = random.sample(entradas, self.k)
     atribuicoes = None
     while True:
-      novas_atribuicoes = map(self.classificar, entradas)
-      
+      novas_atribuicoes = list(map(self.classificar, entradas))
+
       if novas_atribuicoes == atribuicoes:
         return
       
@@ -26,14 +28,48 @@ class KMeans(object):
         if pontos:
           self.agrupamentos[i] = media_dos_vetores(pontos)
 
+  def agrupar(self, entradas):
+    classificacoes = [self.classificar(entrada) for entrada in entradas]
+    grupos = defaultdict(list)
+    for classificacao, entrada in zip(classificacoes, entradas):
+      grupos[classificacao].append(entrada)
+    return grupos
+
+
+
 if __name__ == "__main__":           
-  inputs = [[-14,-5],[13,13],[20,23],[-19,-11],[-9,-16],[21,27],[-49,15],
-            [26,13],[-46,5],[-34,-1],[11,15],[-49,0],[-22,-16],[19,28],
-            [-12,-8],[-13,-19],[-41,8],[-11,-6],[-25,-9],[-18,-3]]
-  random.seed(0) 
-  kMeans = KMeans(2)
-  kMeans.treinar(inputs)
-  print kMeans.agrupamentos
+  
+  entradas, classificacoes = ler_csv("datasets/clusterizacao.csv", ';', 2)
+  x = entradas.iloc[:, 0]
+  y = entradas.iloc[:, 1]
+  lista_entradas = entradas.values.tolist()
+
+  def clusterizacao(k, entradas):
+    kMeans = KMeans(k)
+    cores = [i * 20 for i in range(1, k + 1)]
+    kMeans.treinar(entradas)
+    gerar_grafico("Cluster %d" % (k), x, y, [cores[kMeans.classificar(entrada)] 
+                                             for entrada in entradas])
+    grupos = kMeans.agrupar(entradas)
+    i = 0
+    while i < k:
+      print(kMeans.agrupamentos[i])
+      print(len(grupos[i]))
+      i += 1
+
+  clusterizacao(2, lista_entradas)
+
+
+  
+
+  
+
+ 
+  
+  
+
+
+
     
         
       

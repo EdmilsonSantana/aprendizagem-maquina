@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import csv, sys
+import math
   
 def mutiplicacao_por_escalar(c, v):
     """c é um numero, v é um vetor"""
@@ -14,7 +14,7 @@ def soma_dos_vetores(vetores):
     resultado = somar_vetores(resultado, vetor)
   return resultado
   
-def multiplicacao_vetores(v, w):
+def multiplicar_vetores(v, w):
     return sum(v_i * w_i for v_i, w_i in zip(v, w))
 
 def soma_dos_quadrados(v):
@@ -24,7 +24,7 @@ def subtrair_vetores(v, w):
   return [v_i - w_i for v_i, w_i in zip(v, w)]
           
 def distancia_quadratica(v, w):
-    return soma_dos_quadrados(subtrair_vetores(v, w))
+    return math.sqrt(soma_dos_quadrados(subtrair_vetores(v, w)))
           
 def media_dos_vetores(vetores):
     escalar = 1.0/len(vetores)
