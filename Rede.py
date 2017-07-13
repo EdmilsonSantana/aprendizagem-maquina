@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
 from Neuronio import Neuronio
-from algebra_linear import multiplicacao_vetores
-#from otimizacao.Cromossomo import Cromossomo
+from util import ler_csv
+import numpy as np
+import pandas as pd
 
 class Rede(object):
   TAMANHO_MINIMO_CAMADAS = 2
   INDEX_CAMADA_ENTRADA = 0
+  TAXA_APRENDIZADO = 0.6
   BIAS = [1]
   
   def __init__(self, entradas_treino, saidas_treino, neuronios_por_camada=[]):
@@ -23,7 +25,8 @@ class Rede(object):
     self.ligar_camadas()
 
   def criar_camada(self, quantidade_neuronios):
-    return [Neuronio() for _ in range(quantidade_neuronios)]
+    return [Neuronio(taxa_aprendizado=Rede.TAXA_APRENDIZADO) 
+            for _ in range(quantidade_neuronios)]
 
   def adicionar_camada(self, quantidade_neuronios):
     camada = self.criar_camada(quantidade_neuronios)
@@ -52,7 +55,8 @@ class Rede(object):
   def forward(self, entrada):
     saidas = []
     for camada in self.camadas:
-      saida = [neuronio.ativacao(entrada + Rede.BIAS) for neuronio in camada]
+      saida = [neuronio.ativacao(np.append(entrada, Rede.BIAS)) 
+               for neuronio in camada]
       saidas.append(saida)
       entrada = saida
     return saidas
@@ -63,80 +67,82 @@ class Rede(object):
       
       c = 0
       while c < iteracoes:
-        
-        for i, entrada in enumerate(self.entradas_treino):
-          saidas_camadas = self.forward(entrada)
-          self.backpropagate(entrada, saidas_camadas, self.saidas_treino[i])
-   
+        for i, entradas in enumerate(self.entradas_treino):
+          saidas_por_camada = self.forward(entradas)
+          self.backpropagate(entradas, saidas_por_camada, 
+                             self.saidas_treino[i])
         c += 1
+        print(c)
     return self.camadas
 
-  def backpropagate(self, entrada, saidas_por_camada, saida_esperada):
+  def backpropagate(self, entradas, saidas_por_camada, saidas_esperadas):
     
-    gradiente_descendente = None
+    gradiente = None
     posicao_camada = self.get_quantidade_camadas() - 1
-
-    for _ in range(self.get_quantidade_camadas()):
-      gradiente_descendente = self.get_gradiente_descendente(saidas_por_camada[posicao_camada],
-                                                             posicao_camada, 
-                                                             saida_esperada, 
-                                                             gradiente_descendente)
-      
-     # print("Gradiente %s da Camada %d.\n" % (gradiente_descendente, posicao_camada + 1))
-      
-      entrada_da_camada = None
-      if posicao_camada == Rede.INDEX_CAMADA_ENTRADA:
-        entrada_da_camada = entrada
-      else:
-        entrada_da_camada = saidas_por_camada[posicao_camada - 1]
-        
-      self.ajusta_pesos_camada(self.camadas[posicao_camada], entrada_da_camada, gradiente_descendente)
-      posicao_camada -= 1
-      
-      
-  def get_gradiente_descendente(self, saidas_da_camada, posicao_camada, saida_esperada, gradiente_descendente=None):
-    if posicao_camada == self.get_quantidade_camadas() - 1:
-      diferenca_saida = lambda i:  saidas_da_camada[i] - saida_esperada[i]
-    else:
-      camada_posterior = self.camadas[posicao_camada + 1]
-      diferenca_saida = lambda i: multiplicacao_vetores(gradiente_descendente, 
-                                                        self.get_pesos_camada(camada_posterior, i))
-
-    gradiente_descendente = [self.derivada_sigmoid(saida) * diferenca_saida(i)
-                             for i, saida in enumerate(saidas_da_camada)]
-    return gradiente_descendente
-  
-  def get_pesos_camada(self, camada, posicao_peso):
-    return  [neuronio.get_peso(posicao_peso) for neuronio in camada]
-  
-  def ajusta_pesos_camada(self, camada, entrada_da_camada, gradiente_descendente):
     
+    for _ in range(self.get_quantidade_camadas()):
+      gradiente = self.get_gradiente(saidas_por_camada[posicao_camada],
+                                     saidas_esperadas, 
+                                     posicao_camada,
+                                     gradiente)
+            
+      if posicao_camada == Rede.INDEX_CAMADA_ENTRADA:
+          entrada_da_camada = entradas
+      else:
+          entrada_da_camada = saidas_por_camada[posicao_camada - 1]
+        
+      self.ajusta_pesos_camada(posicao_camada, entrada_da_camada, gradiente)
+      posicao_camada -= 1
+    
+  
+  def get_gradiente(self, saidas_da_camada, saidas_esperadas, 
+                    posicao_camada, gradiente):
+      derivada_sigmoid = self.derivada_sigmoid(saidas_da_camada)
+      diferenca_saida = None
+      if gradiente is None:
+          diferenca_saida = np.subtract(saidas_da_camada, saidas_esperadas)
+      else:
+          pesos_camada_posterior = self.get_pesos_camada(posicao_camada + 1)
+          diferenca_saida = np.dot(gradiente, pesos_camada_posterior)
+        
+      return np.multiply(derivada_sigmoid, diferenca_saida)
+    
+  def get_pesos_camada(self, posicao_camada):
+      return np.array([neuronio.get_pesos() 
+                       for neuronio in self.camadas[posicao_camada]])
+                         
+  def ajusta_pesos_camada(self, posicao_camada, entrada_da_camada, gradiente):
+    camada = self.camadas[posicao_camada]
     for i, neuronio in enumerate(camada):
       for j, entrada in enumerate(entrada_da_camada + Rede.BIAS):
-        neuronio.ajustar_peso(j, entrada, gradiente_descendente[i])
+        neuronio.ajustar_peso(j, entrada, gradiente[i])
       
     
-  def derivada_sigmoid(self, x):
-    return x * (1.0 - x) 
-    
-  def __repr__(self):
-    return "%s\n" % ", ".join([neuronio for neuronio in camada
-                              for camada in self.camadas])
-    
-if __name__ == "__main__":
+  def derivada_sigmoid(self, saidas_da_camada):
+    return np.multiply(saidas_da_camada, np.subtract([1], saidas_da_camada)) 
 
-  #entradas = [[1,0], [1,1], [0,1], [0,0]]
-  #saidas = [[1], [0], [1], [0]]
-
-  entradas = pd.read_csv('./datasets/ocupacao-treino.csv')
-  print(entradas)
-  #rede = Rede(entradas, saidas, [2, 2, 1])
-
-  #print("Pesos %s" % (rede.treinar(10000)) )
-
-  #for i, input in enumerate(entradas):
-  #  outputs = rede.forward(input)[-1]
-  #  print(i, [round(p,2) for p in outputs])
   
 
+if __name__ == "__main__":
 
+   entradas_treino, saidas_treino = ler_csv("./datasets/ocupacao-treino.csv", ',', 6)
+   entradas_teste, saidas_teste = ler_csv("./datasets/ocupacao-teste.csv", ',', 6)
+
+   entradas_treino = entradas_treino.values
+   saidas_treino = [[saida] for saida in saidas_treino.values]
+   entradas_teste = entradas_teste.values
+   saidas_teste = [[saida] for saida in saidas_teste.values]
+   
+   rede = Rede(entradas_treino, saidas_treino, [5, 5, 1])
+    
+   rede.treinar(10000)
+   
+   resultados = []
+   
+   for i, entrada in enumerate(entradas_teste):
+       saidas = rede.forward(entrada)[-1]
+       resultado = "%f, %d" % (round(saidas[0],2), saidas_teste[i][0])       
+       resultados.append(resultado)   
+   
+   df = pd.DataFrame(resultados)     
+   df.to_csv("./resultado.csv");    

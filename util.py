@@ -16,3 +16,6 @@ def ler_csv(arquivo, separator, colunaClassificacao):
 	entradas = data_frame.iloc[:,0:colunaClassificacao]
 	classificacoes = data_frame.iloc[:,colunaClassificacao]
 	return entradas, classificacoes
+
+def to_list(data_frame):
+	return data_frame.values.tolist()

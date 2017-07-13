@@ -57,7 +57,7 @@ if __name__ == "__main__":
       print(len(grupos[i]))
       i += 1
 
-  clusterizacao(2, lista_entradas)
+  clusterizacao(3, lista_entradas)
 
 
   
