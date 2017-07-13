@@ -125,20 +125,22 @@ class Rede(object):
 
 if __name__ == "__main__":
 
-   entradas_treino, saidas_treino = ler_csv("./datasets/ocupacao-treino.csv", ',', 6)
-   entradas_teste, saidas_teste = ler_csv("./datasets/ocupacao-teste.csv", ',', 6)
-
+   entradas_treino, saidas_treino = ler_csv("./datasets/ocupacao-treino.csv", ',', 5)
+   entradas_teste, saidas_teste = ler_csv("./datasets/ocupacao-teste.csv", ',', 5)
+   print(saidas_teste)
    entradas_treino = entradas_treino.values
    saidas_treino = [[saida] for saida in saidas_treino.values]
    entradas_teste = entradas_teste.values
    saidas_teste = [[saida] for saida in saidas_teste.values]
    
-   rede = Rede(entradas_treino, saidas_treino, [5, 5, 1])
+   rede = Rede(entradas_treino, saidas_treino, [6, 1])
     
    rede.treinar(10000)
    
    resultados = []
-   
+
+   pesos = [rede.get_pesos_camada(i) for i in range(rede.get_quantidade_camadas())]
+
    for i, entrada in enumerate(entradas_teste):
        saidas = rede.forward(entrada)[-1]
        resultado = "%f, %d" % (round(saidas[0],2), saidas_teste[i][0])       
@@ -146,3 +148,5 @@ if __name__ == "__main__":
    
    df = pd.DataFrame(resultados)     
    df.to_csv("./resultado.csv");    
+   df = pd.DataFrame(pesos)
+   df.to_csv("./pesos.csv");
