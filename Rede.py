@@ -8,7 +8,7 @@ import pandas as pd
 class Rede(object):
   TAMANHO_MINIMO_CAMADAS = 2
   INDEX_CAMADA_ENTRADA = 0
-  TAXA_APRENDIZADO = 0.6
+  TAXA_APRENDIZADO = 0.01
   BIAS = [1]
   
   def __init__(self, entradas_treino, saidas_treino, neuronios_por_camada=[]):
@@ -127,15 +127,21 @@ if __name__ == "__main__":
 
    entradas_treino, saidas_treino = ler_csv("./datasets/ocupacao-treino.csv", ',', 5)
    entradas_teste, saidas_teste = ler_csv("./datasets/ocupacao-teste.csv", ',', 5)
-   print(saidas_teste)
+   
    entradas_treino = entradas_treino.values
    saidas_treino = [[saida] for saida in saidas_treino.values]
    entradas_teste = entradas_teste.values
    saidas_teste = [[saida] for saida in saidas_teste.values]
    
+   #entradas_treino =np.array([[0,1],[1,0],[1,1],[0,0]])
+   #saidas_treino = np.array([[1],[1], [0], [0]])
+
+   #entradas_teste =np.array([[0,1],[1,0],[1,1],[0,0]])
+   #saidas_teste = np.array([[1],[1], [0], [0]])
+
    rede = Rede(entradas_treino, saidas_treino, [6, 1])
     
-   rede.treinar(10000)
+   rede.treinar(5000)
    
    resultados = []
 
