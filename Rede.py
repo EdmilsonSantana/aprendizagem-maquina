@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+from sklearn.metrics import confusion_matrix
 from Neuronio import Neuronio
 from util import ler_csv
 import numpy as np
@@ -130,29 +130,25 @@ if __name__ == "__main__":
    
    entradas_treino = entradas_treino.values
    saidas_treino = [[saida] for saida in saidas_treino.values]
-   entradas_teste = entradas_teste.values
-   saidas_teste = [[saida] for saida in saidas_teste.values]
-   
-   #entradas_treino =np.array([[0,1],[1,0],[1,1],[0,0]])
-   #saidas_treino = np.array([[1],[1], [0], [0]])
 
-   #entradas_teste =np.array([[0,1],[1,0],[1,1],[0,0]])
-   #saidas_teste = np.array([[1],[1], [0], [0]])
+   entradas_teste = entradas_teste.values
 
    rede = Rede(entradas_treino, saidas_treino, [6, 1])
     
-   rede.treinar(5000)
+   acerto_minimo = 0.9
+   index_saida = 0
+
+   rede.treinar(10000)
    
-   resultados = []
-
-   pesos = [rede.get_pesos_camada(i) for i in range(rede.get_quantidade_camadas())]
-
+   saidas_obtidas = []
    for i, entrada in enumerate(entradas_teste):
        saidas = rede.forward(entrada)[-1]
-       resultado = "%f, %d" % (round(saidas[0],2), saidas_teste[i][0])       
-       resultados.append(resultado)   
+       saida_obtida = saidas[index_saida]
+       saidas_obtidas.append(1 if saida_obtida >= acerto_minimo else 0)
    
-   df = pd.DataFrame(resultados)     
-   df.to_csv("./resultado.csv");    
-   df = pd.DataFrame(pesos)
-   df.to_csv("./pesos.csv");
+   matriz_confusao = confusion_matrix(saidas_teste, saidas_obtidas)
+   df = pd.DataFrame(matriz_confusao)     
+   df.to_csv("./matriz-confusao.csv"); 
+   resultado_teste = {'Esperado':saidas_teste, 'Obtido':saidas_obtidas}
+   df = pd.DataFrame(resultado_teste) 
+   df.to_csv("./resultado_teste.csv"); 

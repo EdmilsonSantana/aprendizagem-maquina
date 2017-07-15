@@ -46,7 +46,7 @@ if __name__ == "__main__":
 
   def clusterizacao(k, entradas):
     kMeans = KMeans(k)
-    cores = [i * 20 for i in range(1, k + 1)]
+    cores = [i * 35 for i in range(1, k + 1)]
     kMeans.treinar(entradas)
     gerar_grafico("Cluster %d" % (k), x, y, [cores[kMeans.classificar(entrada)] 
                                              for entrada in entradas])
