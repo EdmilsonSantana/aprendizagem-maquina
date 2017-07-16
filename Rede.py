@@ -69,7 +69,7 @@ class Rede(object):
       while c < iteracoes:
         for i, entradas in enumerate(self.entradas_treino):
           saidas_por_camada = self.forward(entradas)
-          self.backpropagate(entradas, saidas_por_camada, 
+          self.backpropagation(entradas, saidas_por_camada, 
                              self.saidas_treino[i])
         c += 1
         print(c)
