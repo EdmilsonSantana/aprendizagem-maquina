@@ -8,7 +8,7 @@ import pandas as pd
 class Rede(object):
   TAMANHO_MINIMO_CAMADAS = 2
   INDEX_CAMADA_ENTRADA = 0
-  TAXA_APRENDIZADO = 0.01
+  TAXA_APRENDIZADO = 0.4
   BIAS = [1]
   
   def __init__(self, entradas_treino, saidas_treino, neuronios_por_camada=[]):
@@ -75,7 +75,7 @@ class Rede(object):
         print(c)
     return self.camadas
 
-  def backpropagate(self, entradas, saidas_por_camada, saidas_esperadas):
+  def backpropagation(self, entradas, saidas_por_camada, saidas_esperadas):
     
     gradiente = None
     posicao_camada = self.get_quantidade_camadas() - 1
@@ -106,7 +106,7 @@ class Rede(object):
           diferenca_saida = np.dot(gradiente, pesos_camada_posterior)
         
       return np.multiply(derivada_sigmoid, diferenca_saida)
-    
+  
   def get_pesos_camada(self, posicao_camada):
       return np.array([neuronio.get_pesos() 
                        for neuronio in self.camadas[posicao_camada]])
@@ -116,7 +116,6 @@ class Rede(object):
     for i, neuronio in enumerate(camada):
       for j, entrada in enumerate(entrada_da_camada + Rede.BIAS):
         neuronio.ajustar_peso(j, entrada, gradiente[i])
-      
     
   def derivada_sigmoid(self, saidas_da_camada):
     return np.multiply(saidas_da_camada, np.subtract([1], saidas_da_camada)) 
