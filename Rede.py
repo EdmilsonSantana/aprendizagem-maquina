@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from sklearn.metrics import confusion_matrix
+import matplotlib.pyplot as plt
 from Neuronio import Neuronio
 from util import ler_csv
 import numpy as np
@@ -8,7 +9,7 @@ import pandas as pd
 class Rede(object):
   TAMANHO_MINIMO_CAMADAS = 2
   INDEX_CAMADA_ENTRADA = 0
-  TAXA_APRENDIZADO = 0.4
+  TAXA_APRENDIZADO = 0.04
   BIAS = [1]
   
   def __init__(self, entradas_treino, saidas_treino, neuronios_por_camada=[]):
@@ -61,31 +62,40 @@ class Rede(object):
       entrada = saida
     return saidas
   
-  def treinar(self, iteracoes):
+  def treinar(self, epocas):
     
     if self.get_quantidade_camadas() >= Rede.TAMANHO_MINIMO_CAMADAS:
       
       c = 0
-      while c < iteracoes:
+      erros_treinamento = []
+      while c < epocas:
+        erro_medio = 0.0
         for i, entradas in enumerate(self.entradas_treino):
           saidas_por_camada = self.forward(entradas)
-          self.backpropagation(entradas, saidas_por_camada, 
+          erro = self.backpropagation(entradas, saidas_por_camada, 
                              self.saidas_treino[i])
+          erro_medio += erro
         c += 1
         print(c)
-    return self.camadas
+        erros_treinamento.append(erro_medio)
+        
+    return erros_treinamento
 
   def backpropagation(self, entradas, saidas_por_camada, saidas_esperadas):
     
     gradiente = None
     posicao_camada = self.get_quantidade_camadas() - 1
-    
+    erros = []
     for _ in range(self.get_quantidade_camadas()):
-      gradiente = self.get_gradiente(saidas_por_camada[posicao_camada],
+      saidas_da_camada = saidas_por_camada[posicao_camada]
+      
+      gradiente = self.get_gradiente(saidas_da_camada,
                                      saidas_esperadas, 
                                      posicao_camada,
                                      gradiente)
-            
+                                     
+      erros.append(self.get_erro_padrao(saidas_esperadas, saidas_da_camada))
+  
       if posicao_camada == Rede.INDEX_CAMADA_ENTRADA:
           entrada_da_camada = entradas
       else:
@@ -93,8 +103,15 @@ class Rede(object):
         
       self.ajusta_pesos_camada(posicao_camada, entrada_da_camada, gradiente)
       posicao_camada -= 1
-    
+      
+    return erros[0]
+   
   
+  def get_erro_padrao(self, saidas_esperadas, saidas_da_camada):
+      diferenca_saida = np.subtract(saidas_esperadas, saidas_da_camada)
+      return np.multiply(0.5, np.sum(np.power(diferenca_saida, 2.0)))
+      
+      
   def get_gradiente(self, saidas_da_camada, saidas_esperadas, 
                     posicao_camada, gradiente):
       derivada_sigmoid = self.derivada_sigmoid(saidas_da_camada)
@@ -131,14 +148,20 @@ if __name__ == "__main__":
    saidas_treino = [[saida] for saida in saidas_treino.values]
 
    entradas_teste = entradas_teste.values
-
+   saidas_teste = saidas_teste.values
    rede = Rede(entradas_treino, saidas_treino, [6, 1])
     
    acerto_minimo = 0.9
    index_saida = 0
-
-   rede.treinar(10000)
+   epocas = 10000
+   erros_treinamento = rede.treinar(epocas)
    
+   plt.xlabel("Épocas")
+   plt.ylabel("Erro Absoluto")
+  
+   plt.plot(np.arange(epocas) + 1, erros_treinamento, '-o')
+   plt.show()
+   """
    saidas_obtidas = []
    for i, entrada in enumerate(entradas_teste):
        saidas = rede.forward(entrada)[-1]
@@ -150,4 +173,4 @@ if __name__ == "__main__":
    df.to_csv("./matriz-confusao.csv"); 
    resultado_teste = {'Esperado':saidas_teste, 'Obtido':saidas_obtidas}
    df = pd.DataFrame(resultado_teste) 
-   df.to_csv("./resultado_teste.csv"); 
+   df.to_csv("./resultado_teste.csv"); """
