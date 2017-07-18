@@ -9,7 +9,7 @@ import pandas as pd
 class Rede(object):
   TAMANHO_MINIMO_CAMADAS = 2
   INDEX_CAMADA_ENTRADA = 0
-  TAXA_APRENDIZADO = 0.04
+  TAXA_APRENDIZADO = 0.01
   BIAS = [1]
   
   def __init__(self, entradas_treino, saidas_treino, neuronios_por_camada=[]):
@@ -156,12 +156,12 @@ if __name__ == "__main__":
    epocas = 10000
    erros_treinamento = rede.treinar(epocas)
    
-   plt.xlabel("Épocas")
+   plt.xlabel("Epocas")
    plt.ylabel("Erro Absoluto")
   
    plt.plot(np.arange(epocas) + 1, erros_treinamento, '-o')
-   plt.show()
-   """
+   plt.savefig('epocas-%d.png' % (epocas))
+   
    saidas_obtidas = []
    for i, entrada in enumerate(entradas_teste):
        saidas = rede.forward(entrada)[-1]
@@ -173,4 +173,4 @@ if __name__ == "__main__":
    df.to_csv("./matriz-confusao.csv"); 
    resultado_teste = {'Esperado':saidas_teste, 'Obtido':saidas_obtidas}
    df = pd.DataFrame(resultado_teste) 
-   df.to_csv("./resultado_teste.csv"); """
+   df.to_csv("./resultado_teste.csv");
