@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 from sklearn.metrics import confusion_matrix
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from Neuronio import Neuronio
 from util import ler_csv
@@ -156,7 +158,7 @@ if __name__ == "__main__":
    epocas = 10000
    erros_treinamento = rede.treinar(epocas)
    
-   plt.xlabel("Epocas")
+   plt.xlabel("Épocas")
    plt.ylabel("Erro Absoluto")
   
    plt.plot(np.arange(epocas) + 1, erros_treinamento, '-o')
