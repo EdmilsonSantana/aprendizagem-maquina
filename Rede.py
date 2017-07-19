@@ -9,7 +9,7 @@ import pandas as pd
 class Rede(object):
   TAMANHO_MINIMO_CAMADAS = 2
   INDEX_CAMADA_ENTRADA = 0
-  TAXA_APRENDIZADO = 0.01
+  TAXA_APRENDIZADO = 0.05
   BIAS = [1]
   
   def __init__(self, entradas_treino, saidas_treino, neuronios_por_camada=[]):
@@ -62,24 +62,32 @@ class Rede(object):
       entrada = saida
     return saidas
   
-  def treinar(self, epocas):
+  def treinar(self, epocas, entradas_validacao, saidas_validacao):
     
     if self.get_quantidade_camadas() >= Rede.TAMANHO_MINIMO_CAMADAS:
-      
+        
       c = 0
       erros_treinamento = []
+      erros_validacao = []
       while c < epocas:
-        erro_medio = 0.0
+        erro_treino = 0.0
+        erro_validacao = 0.0
+        # treino
         for i, entradas in enumerate(self.entradas_treino):
           saidas_por_camada = self.forward(entradas)
-          erro = self.backpropagation(entradas, saidas_por_camada, 
-                             self.saidas_treino[i])
-          erro_medio += erro
+          erro_treino += self.backpropagation(entradas, saidas_por_camada, 
+                                              self.saidas_treino[i])
+        # validacao
+        for i, entradas in enumerate(entradas_validacao):
+          saidas_por_camada = self.forward(entradas)
+          erro_validacao += self.get_erro_padrao(saidas_validacao[i], 
+                                                 saidas_por_camada[-1])
         c += 1
         print(c)
-        erros_treinamento.append(erro_medio)
+        erros_validacao.append(erro_validacao / len(entradas_validacao))
+        erros_treinamento.append(erro_treino / len(self.entradas_treino))
         
-    return erros_treinamento
+    return erros_treinamento, erros_validacao
 
   def backpropagation(self, entradas, saidas_por_camada, saidas_esperadas):
     
@@ -143,23 +151,30 @@ if __name__ == "__main__":
 
    entradas_treino, saidas_treino = ler_csv("./datasets/ocupacao-treino.csv", ',', 5)
    entradas_teste, saidas_teste = ler_csv("./datasets/ocupacao-teste.csv", ',', 5)
-   
+   entradas_validacao, saidas_validacao = ler_csv("./datasets/ocupacao-validacao.csv", ',', 5)
+
    entradas_treino = entradas_treino.values
    saidas_treino = [[saida] for saida in saidas_treino.values]
 
    entradas_teste = entradas_teste.values
    saidas_teste = saidas_teste.values
+   
+   entradas_validacao = entradas_validacao.values
+   saidas_validacao = [[saida] for saida in saidas_validacao.values]
+
    rede = Rede(entradas_treino, saidas_treino, [6, 1])
     
    acerto_minimo = 0.9
    index_saida = 0
-   epocas = 10000
-   erros_treinamento = rede.treinar(epocas)
+   epocas = 5000
+   erros_treinamento, erros_validacao = rede.treinar(epocas, entradas_validacao, saidas_validacao)
    
    plt.xlabel("Epocas")
    plt.ylabel("Erro Absoluto")
   
    plt.plot(np.arange(epocas) + 1, erros_treinamento, '-o')
+   plt.plot(np.arange(epocas) + 1, erros_validacao, '-x')
+   plt.legend(['Treinamento', 'Validação'], loc='upper left')
    plt.savefig('epocas-%d.png' % (epocas))
    
    saidas_obtidas = []
@@ -169,8 +184,101 @@ if __name__ == "__main__":
        saidas_obtidas.append(1 if saida_obtida >= acerto_minimo else 0)
    
    matriz_confusao = confusion_matrix(saidas_teste, saidas_obtidas)
-   df = pd.DataFrame(matriz_confusao)     
+   df = pd.DataFrame(matriz_confusao)
+   print(df)     
    df.to_csv("./matriz-confusao.csv"); 
    resultado_teste = {'Esperado':saidas_teste, 'Obtido':saidas_obtidas}
    df = pd.DataFrame(resultado_teste) 
    df.to_csv("./resultado_teste.csv");
+   
+   
+   
+   
+   
+
+def teste():
+   raw_digits = [
+          """11111
+             1...1
+             1...1
+             1...1
+             11111""",
+             
+          """..1..
+             ..1..
+             ..1..
+             ..1..
+             ..1..""",
+             
+          """11111
+             ....1
+             11111
+             1....
+             11111""",
+             
+          """11111
+             ....1
+             11111
+             ....1
+             11111""",     
+             
+          """1...1
+             1...1
+             11111
+             ....1
+             ....1""",             
+             
+          """11111
+             1....
+             11111
+             ....1
+             11111""",   
+             
+          """11111
+             1....
+             11111
+             1...1
+             11111""",             
+
+          """11111
+             ....1
+             ....1
+             ....1
+             ....1""",
+             
+          """11111
+             1...1
+             11111
+             1...1
+             11111""",    
+             
+          """11111
+             1...1
+             11111
+             ....1
+             11111"""]     
+
+   def make_digit(raw_digit):
+       return [1 if c == '1' else 0
+               for row in raw_digit.split("\n")
+               for c in row.strip()]
+                
+   entradas_treino = list(map(make_digit, raw_digits))
+
+   saidas_treino = [[1 if i == j else 0 for i in range(10)]
+                   for j in range(10)]
+               
+   rede = Rede(entradas_treino, saidas_treino, [5, 10])
+  
+   epocas = 2000
+   erros_treinamento = rede.treinar(epocas)
+   
+   plt.xlabel("Epocas")
+   plt.ylabel("Erro Absoluto")
+  
+   plt.plot(np.arange(epocas) + 1, erros_treinamento, '-o')
+   plt.savefig('epocas-%d.png' % (epocas))
+   
+   for i, entrada in enumerate(entradas_treino):
+       saidas = rede.forward(entrada)[-1]
+       print(i, [round(p,2) for p in saidas])
