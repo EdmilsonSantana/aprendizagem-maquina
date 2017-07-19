@@ -184,8 +184,7 @@ if __name__ == "__main__":
        saidas_obtidas.append(1 if saida_obtida >= acerto_minimo else 0)
    
    matriz_confusao = confusion_matrix(saidas_teste, saidas_obtidas)
-   df = pd.DataFrame(matriz_confusao)
-   print(df)     
+   df = pd.DataFrame(matriz_confusao)     
    df.to_csv("./matriz-confusao.csv"); 
    resultado_teste = {'Esperado':saidas_teste, 'Obtido':saidas_obtidas}
    df = pd.DataFrame(resultado_teste) 
