@@ -11,7 +11,7 @@ import pandas as pd
 class Rede(object):
   TAMANHO_MINIMO_CAMADAS = 2
   INDEX_CAMADA_ENTRADA = 0
-  TAXA_APRENDIZADO = 0.05
+  TAXA_APRENDIZADO = 0.5
   BIAS = [1]
   
   def __init__(self, entradas_treino, saidas_treino, neuronios_por_camada=[]):
@@ -171,12 +171,12 @@ if __name__ == "__main__":
    epocas = 10000
    erros_treinamento, erros_validacao = rede.treinar(epocas, entradas_validacao, saidas_validacao)
    
-   plt.xlabel("Epocas")
-   plt.ylabel("Erro Absoluto")
+   plt.xlabel("Épocas")
+   plt.ylabel("Erro")
   
    plt.plot(np.arange(epocas) + 1, erros_treinamento, '-o')
    plt.plot(np.arange(epocas) + 1, erros_validacao, '-x')
-   plt.legend(['Treinamento', 'Validação'], loc='upper left')
+   plt.legend(['Treinamento', 'Validação'], loc='upper right')
    plt.savefig('epocas-%d.png' % (epocas))
    
    saidas_obtidas = []
