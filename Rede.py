@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 from sklearn.metrics import confusion_matrix
+import matplotlib as mpl
+mpl.use('Agg')
 import matplotlib.pyplot as plt
 from Neuronio import Neuronio
 from util import ler_csv
@@ -166,7 +168,7 @@ if __name__ == "__main__":
     
    acerto_minimo = 0.9
    index_saida = 0
-   epocas = 5000
+   epocas = 10000
    erros_treinamento, erros_validacao = rede.treinar(epocas, entradas_validacao, saidas_validacao)
    
    plt.xlabel("Epocas")
