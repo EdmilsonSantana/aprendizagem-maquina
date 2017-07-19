@@ -11,7 +11,7 @@ import pandas as pd
 class Rede(object):
   TAMANHO_MINIMO_CAMADAS = 2
   INDEX_CAMADA_ENTRADA = 0
-  TAXA_APRENDIZADO = 0.05
+  TAXA_APRENDIZADO = 0.01
   BIAS = [1]
   
   def __init__(self, entradas_treino, saidas_treino, neuronios_por_camada=[]):
@@ -151,7 +151,7 @@ if __name__ == "__main__":
 
    entradas_teste = entradas_teste.values
    saidas_teste = saidas_teste.values
-   rede = Rede(entradas_treino, saidas_treino, [6, 1])
+   rede = Rede(entradas_treino, saidas_treino, [12, 1])
     
    acerto_minimo = 0.9
    index_saida = 0
