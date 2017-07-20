@@ -71,29 +71,39 @@ class Rede(object):
       erros_validacao = []
       while c < epocas:
         erro_treino = 0.0
-        erro_validacao = 0.0
         # treino
         for i, entradas in enumerate(self.entradas_treino):
           saidas_por_camada = self.forward(entradas)
-          erro_treino += self.backpropagation(entradas, saidas_por_camada, 
-                                              self.saidas_treino[i])
+          erro_treino += self.get_erro(self.saidas_treino[i], 
+                                       saidas_por_camada[-1])
+          self.backpropagation(entradas, saidas_por_camada, 
+                               self.saidas_treino[i])
         # validacao
-        for i, entradas in enumerate(entradas_validacao):
-          saidas_por_camada = self.forward(entradas)
-          erro_validacao += self.get_erro_padrao(saidas_validacao[i], 
-                                                 saidas_por_camada[-1])
+        erro_validacao = self.validacao(entradas_validacao, saidas_validacao)
         c += 1
-        print(c)
-        erros_validacao.append(erro_validacao / len(entradas_validacao))
-        erros_treinamento.append(erro_treino / len(self.entradas_treino))
+        
+        erro_validacao = erro_validacao / len(entradas_validacao)
+        erro_treino = erro_treino / len(self.entradas_treino)
+        print("Época: %d - Treino: %f - Validação: %f" % 
+                                        (c, erro_treino, erro_validacao))
+        erros_validacao.append(erro_validacao)
+        erros_treinamento.append(erro_treino)
+        
         
     return erros_treinamento, erros_validacao
 
+  def validacao(self, entradas_validacao, saidas_validacao):
+      erro_validacao = 0.0
+      for i, entradas in enumerate(entradas_validacao):
+          saidas_por_camada = self.forward(entradas)
+          erro_validacao += self.get_erro(saidas_validacao[i], 
+                                          saidas_por_camada[-1])
+      return erro_validacao
+                                    
   def backpropagation(self, entradas, saidas_por_camada, saidas_esperadas):
     
     gradiente = None
     posicao_camada = self.get_quantidade_camadas() - 1
-    erros = []
     for _ in range(self.get_quantidade_camadas()):
       saidas_da_camada = saidas_por_camada[posicao_camada]
       
@@ -102,7 +112,6 @@ class Rede(object):
                                      posicao_camada,
                                      gradiente)
                                      
-      erros.append(self.get_erro_padrao(saidas_esperadas, saidas_da_camada))
   
       if posicao_camada == Rede.INDEX_CAMADA_ENTRADA:
           entrada_da_camada = entradas
@@ -111,13 +120,11 @@ class Rede(object):
         
       self.ajusta_pesos_camada(posicao_camada, entrada_da_camada, gradiente)
       posicao_camada -= 1
-      
-    return erros[0]
    
   
-  def get_erro_padrao(self, saidas_esperadas, saidas_da_camada):
+  def get_erro(self, saidas_esperadas, saidas_da_camada):
       diferenca_saida = np.subtract(saidas_esperadas, saidas_da_camada)
-      return np.multiply(0.5, np.sum(np.power(diferenca_saida, 2.0)))
+      return np.power(diferenca_saida, 2.0)
       
       
   def get_gradiente(self, saidas_da_camada, saidas_esperadas, 
@@ -169,14 +176,17 @@ if __name__ == "__main__":
    epocas = 5000
    erros_treinamento, erros_validacao = rede.treinar(epocas, entradas_validacao, saidas_validacao)
    
-   plt.xlabel("Epocas")
-   plt.ylabel("Erro Absoluto")
+   plt.xlabel("Épocas")
+   plt.ylabel("Erros")
   
    plt.plot(np.arange(epocas) + 1, erros_treinamento, '-o')
    plt.plot(np.arange(epocas) + 1, erros_validacao, '-x')
-   plt.legend(['Treinamento', 'Validação'], loc='upper left')
+   plt.legend(['Treinamento', 'Validação'], loc='upper right')
    plt.savefig('epocas-%d.png' % (epocas))
    
+   pesos = [(i, j, neuronio.pesos) for i, camada in enumerate(rede.camadas)
+                                   for j, neuronio in enumerate(camada)]
+   print(pesos)
    saidas_obtidas = []
    for i, entrada in enumerate(entradas_teste):
        saidas = rede.forward(entrada)[-1]
