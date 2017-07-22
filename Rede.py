@@ -9,13 +9,15 @@ import pandas as pd
 class Rede(object):
   TAMANHO_MINIMO_CAMADAS = 2
   INDEX_CAMADA_ENTRADA = 0
-  TAXA_APRENDIZADO = 0.05
+  TAXA_APRENDIZADO = 0.1
   BIAS = [1]
   
-  def __init__(self, entradas_treino, saidas_treino, neuronios_por_camada=[]):
+  def __init__(self, conjunto_treino, conjunto_validacao, neuronios_por_camada=[]):
     self.camadas = []
-    self.entradas_treino = entradas_treino
-    self.saidas_treino = saidas_treino
+    self.entradas_treino = conjunto_treino[0]
+    self.saidas_treino = conjunto_treino[1]
+    self.entradas_validacao = conjunto_validacao[0]
+    self.saidas_validacao = conjunto_validacao[1]
     self.inicializar_neuronios(neuronios_por_camada)
     
   def inicializar_neuronios(self,neuronios_por_camada):
@@ -62,7 +64,7 @@ class Rede(object):
       entrada = saida
     return saidas
   
-  def treinar(self, epocas, entradas_validacao, saidas_validacao):
+  def treinar(self, epocas):
     
     if self.get_quantidade_camadas() >= Rede.TAMANHO_MINIMO_CAMADAS:
         
@@ -70,19 +72,11 @@ class Rede(object):
       erros_treinamento = []
       erros_validacao = []
       while c < epocas:
-        erro_treino = 0.0
-        # treino
-        for i, entradas in enumerate(self.entradas_treino):
-          saidas_por_camada = self.forward(entradas)
-          erro_treino += self.get_erro(self.saidas_treino[i], 
-                                       saidas_por_camada[-1])
-          self.backpropagation(entradas, saidas_por_camada, 
-                               self.saidas_treino[i])
-        # validacao
-        erro_validacao = self.validacao(entradas_validacao, saidas_validacao)
+        erro_treino = self.aprender()
+        erro_validacao = self.validar_aprendizado()
         c += 1
         
-        erro_validacao = erro_validacao / len(entradas_validacao)
+        erro_validacao = erro_validacao / len(self.entradas_validacao)
         erro_treino = erro_treino / len(self.entradas_treino)
         print("Época: %d - Treino: %f - Validação: %f" % 
                                         (c, erro_treino, erro_validacao))
@@ -92,13 +86,23 @@ class Rede(object):
         
     return erros_treinamento, erros_validacao
 
-  def validacao(self, entradas_validacao, saidas_validacao):
+  def validar_aprendizado(self):
       erro_validacao = 0.0
-      for i, entradas in enumerate(entradas_validacao):
+      for i, entradas in enumerate(self.entradas_validacao):
           saidas_por_camada = self.forward(entradas)
-          erro_validacao += self.get_erro(saidas_validacao[i], 
+          erro_validacao += self.get_erro(self.saidas_validacao[i], 
                                           saidas_por_camada[-1])
       return erro_validacao
+      
+  def aprender(self):
+      erro_treino = 0.0
+      for i, entradas in enumerate(self.entradas_treino):
+          saidas_por_camada = self.forward(entradas)
+          erro_treino += self.get_erro(self.saidas_treino[i], 
+                                       saidas_por_camada[-1])
+          self.backpropagation(entradas, saidas_por_camada, 
+                               self.saidas_treino[i])
+      return erro_treino
                                     
   def backpropagation(self, entradas, saidas_por_camada, saidas_esperadas):
     
@@ -169,12 +173,14 @@ if __name__ == "__main__":
    entradas_validacao = entradas_validacao.values
    saidas_validacao = [[saida] for saida in saidas_validacao.values]
 
-   rede = Rede(entradas_treino, saidas_treino, [6, 1])
+   rede = Rede((entradas_treino, saidas_treino), 
+               (entradas_validacao, saidas_validacao),
+               [18, 18, 1])
     
-   acerto_minimo = 0.9
+   limiar_saida = 0.5
+   epocas = 100
    index_saida = 0
-   epocas = 5000
-   erros_treinamento, erros_validacao = rede.treinar(epocas, entradas_validacao, saidas_validacao)
+   erros_treinamento, erros_validacao = rede.treinar(epocas)
    
    plt.xlabel("Épocas")
    plt.ylabel("Erros")
@@ -184,21 +190,24 @@ if __name__ == "__main__":
    plt.legend(['Treinamento', 'Validação'], loc='upper right')
    plt.savefig('epocas-%d.png' % (epocas))
    
-   pesos = [(i, j, neuronio.pesos) for i, camada in enumerate(rede.camadas)
+   pesos = [neuronio.pesos for i, camada in enumerate(rede.camadas)
                                    for j, neuronio in enumerate(camada)]
-   print(pesos)
+                                       
    saidas_obtidas = []
    for i, entrada in enumerate(entradas_teste):
        saidas = rede.forward(entrada)[-1]
        saida_obtida = saidas[index_saida]
-       saidas_obtidas.append(1 if saida_obtida >= acerto_minimo else 0)
+       saidas_obtidas.append(1 if saida_obtida >= limiar_saida else 0)
    
    matriz_confusao = confusion_matrix(saidas_teste, saidas_obtidas)
    df = pd.DataFrame(matriz_confusao)     
+   print(df)
    df.to_csv("./matriz-confusao.csv"); 
    resultado_teste = {'Esperado':saidas_teste, 'Obtido':saidas_obtidas}
    df = pd.DataFrame(resultado_teste) 
    df.to_csv("./resultado_teste.csv");
+   df = pd.DataFrame(pesos) 
+   df.to_csv("./pesos.csv");
    
    
    

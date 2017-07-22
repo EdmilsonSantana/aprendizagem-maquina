@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import matplotlib.pyplot as plt
 import pandas as pd
+from sklearn.utils import shuffle
 
 def mostrar_grafico(x, y, cores):
 	plt.scatter(x, y, c=cores)
@@ -12,7 +13,9 @@ def gerar_grafico(arquivo, x, y, cores):
 
 def ler_csv(arquivo, separator, colunaClassificacao):
 	"""retorna um data frame para as entradas e outro para as classficações"""
-	data_frame = pd.read_csv(arquivo, header=None, sep=separator)
+	data_frame = shuffle(pd.read_csv(arquivo, header=None, sep=separator), 
+                          random_state=0)
+ 
 	entradas = data_frame.iloc[:,0:colunaClassificacao]
 	classificacoes = data_frame.iloc[:,colunaClassificacao]
 	return entradas, classificacoes
